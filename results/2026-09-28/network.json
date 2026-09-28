@@ -1,0 +1,28 @@
+{
+  "measuredAt": "2026-09-28T15:20:17.141Z",
+  "samples": 5,
+  "transcriptfetch": {
+    "url": "https://transcriptfetch.com/api/v2/health",
+    "ms": [
+      448,
+      160,
+      352,
+      142,
+      247
+    ],
+    "min": 142,
+    "max": 448
+  },
+  "supadata": {
+    "url": "https://api.supadata.ai/v1/me",
+    "ms": [
+      174,
+      124,
+      105,
+      107,
+      94
+    ],
+    "min": 94,
+    "max": 174
+  }
+}

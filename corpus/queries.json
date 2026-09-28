@@ -1,0 +1,155 @@
+{
+  "youtube": {
+    "perQuery": 10,
+    "filters": {
+      "captions": true
+    },
+    "queries": [
+      {
+        "query": "python tutorial",
+        "filters": {
+          "duration": "medium"
+        }
+      },
+      {
+        "query": "podcast full episode interview",
+        "filters": {
+          "duration": "long"
+        }
+      },
+      {
+        "query": "recette facile cuisine"
+      },
+      {
+        "query": "news explained",
+        "filters": {
+          "upload_date": "week"
+        }
+      },
+      {
+        "query": "phone review",
+        "filters": {
+          "duration": "short"
+        }
+      },
+      {
+        "query": "university lecture",
+        "filters": {
+          "duration": "long"
+        }
+      },
+      {
+        "query": "stock market explained"
+      },
+      {
+        "query": "travel vlog"
+      },
+      {
+        "query": "home workout routine"
+      },
+      {
+        "query": "noticias de hoy",
+        "filters": {
+          "upload_date": "week"
+        }
+      },
+      {
+        "query": "history documentary",
+        "filters": {
+          "duration": "long"
+        }
+      },
+      {
+        "query": "how to fix a leaking faucet",
+        "filters": {
+          "duration": "short"
+        }
+      }
+    ]
+  },
+  "tiktok": {
+    "perQuery": 10,
+    "queries": [
+      {
+        "query": "cooking recipe"
+      },
+      {
+        "query": "fitness tips"
+      },
+      {
+        "query": "study tips"
+      },
+      {
+        "query": "tech review"
+      },
+      {
+        "query": "travel tips"
+      },
+      {
+        "query": "comedy skit"
+      },
+      {
+        "query": "news today"
+      },
+      {
+        "query": "makeup tutorial"
+      },
+      {
+        "query": "personal finance"
+      },
+      {
+        "query": "learn spanish"
+      },
+      {
+        "query": "dog training"
+      },
+      {
+        "query": "book recommendations"
+      }
+    ]
+  },
+  "instagram": {
+    "perQuery": 10,
+    "queries": [
+      {
+        "query": "cooking recipe"
+      },
+      {
+        "query": "fitness tips"
+      },
+      {
+        "query": "study tips"
+      },
+      {
+        "query": "tech review"
+      },
+      {
+        "query": "travel tips"
+      },
+      {
+        "query": "comedy skit"
+      },
+      {
+        "query": "news today"
+      },
+      {
+        "query": "makeup tutorial"
+      },
+      {
+        "query": "personal finance"
+      },
+      {
+        "query": "learn spanish"
+      },
+      {
+        "query": "dog training"
+      },
+      {
+        "query": "book recommendations"
+      },
+      {
+        "query": "home decor ideas"
+      }
+    ]
+  }
+}

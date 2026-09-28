@@ -1,0 +1,288 @@
+{
+  "instagram": {
+    "mode": "auto",
+    "attempted": 120,
+    "pairs": 95,
+    "transcriptfetch": {
+      "succeeded": 118,
+      "medianMs": 5878,
+      "p90Ms": 12089.000000000011,
+      "meanMs": 9936
+    },
+    "supadata": {
+      "succeeded": 96,
+      "medianMs": 19918,
+      "p90Ms": 41230.200000000026,
+      "meanMs": 25099
+    },
+    "transcriptfetchFaster": 84,
+    "bySource": {
+      "transcriptfetch=audio supadata=sync": {
+        "attempted": 114,
+        "pairs": 93,
+        "transcriptfetch": {
+          "succeeded": 114,
+          "medianMs": 5878,
+          "p90Ms": 12322.999999999996,
+          "meanMs": 10000
+        },
+        "supadata": {
+          "succeeded": 93,
+          "medianMs": 19870,
+          "p90Ms": 35939,
+          "meanMs": 22199
+        },
+        "transcriptfetchFaster": 82
+      },
+      "transcriptfetch=audio supadata=job": {
+        "attempted": 3,
+        "pairs": 2,
+        "transcriptfetch": {
+          "succeeded": 3,
+          "medianMs": 6932,
+          "p90Ms": 8751.2,
+          "meanMs": 6932
+        },
+        "supadata": {
+          "succeeded": 2,
+          "medianMs": 159967.5,
+          "p90Ms": 165822.3,
+          "meanMs": 159968
+        },
+        "transcriptfetchFaster": 2
+      },
+      "transcriptfetch=none supadata=sync": {
+        "attempted": 2,
+        "pairs": 0,
+        "transcriptfetch": {
+          "succeeded": 0,
+          "medianMs": null,
+          "p90Ms": null,
+          "meanMs": null
+        },
+        "supadata": {
+          "succeeded": 1,
+          "medianMs": null,
+          "p90Ms": null,
+          "meanMs": null
+        },
+        "transcriptfetchFaster": 0
+      },
+      "transcriptfetch=audio supadata=none": {
+        "attempted": 1,
+        "pairs": 0,
+        "transcriptfetch": {
+          "succeeded": 1,
+          "medianMs": null,
+          "p90Ms": null,
+          "meanMs": null
+        },
+        "supadata": {
+          "succeeded": 0,
+          "medianMs": null,
+          "p90Ms": null,
+          "meanMs": null
+        },
+        "transcriptfetchFaster": 0
+      }
+    },
+    "failures": {
+      "transcriptfetch": [
+        [
+          "no_speech",
+          2
+        ]
+      ],
+      "supadata": [
+        [
+          "transcript-unavailable",
+          22
+        ],
+        [
+          "empty_transcript",
+          1
+        ],
+        [
+          "fetch failed",
+          1
+        ]
+      ]
+    }
+  },
+  "tiktok": {
+    "mode": "auto",
+    "attempted": 120,
+    "pairs": 108,
+    "transcriptfetch": {
+      "succeeded": 118,
+      "medianMs": 1326,
+      "p90Ms": 6612.9,
+      "meanMs": 2553
+    },
+    "supadata": {
+      "succeeded": 108,
+      "medianMs": 18429.5,
+      "p90Ms": 29433.8,
+      "meanMs": 19723
+    },
+    "transcriptfetchFaster": 107,
+    "bySource": {
+      "transcriptfetch=captions supadata=sync": {
+        "attempted": 86,
+        "pairs": 86,
+        "transcriptfetch": {
+          "succeeded": 86,
+          "medianMs": 1267,
+          "p90Ms": 1856,
+          "meanMs": 1359
+        },
+        "supadata": {
+          "succeeded": 86,
+          "medianMs": 17859.5,
+          "p90Ms": 23081.5,
+          "meanMs": 16311
+        },
+        "transcriptfetchFaster": 85
+      },
+      "transcriptfetch=audio supadata=none": {
+        "attempted": 1,
+        "pairs": 0,
+        "transcriptfetch": {
+          "succeeded": 1,
+          "medianMs": null,
+          "p90Ms": null,
+          "meanMs": null
+        },
+        "supadata": {
+          "succeeded": 0,
+          "medianMs": null,
+          "p90Ms": null,
+          "meanMs": null
+        },
+        "transcriptfetchFaster": 0
+      },
+      "transcriptfetch=audio supadata=sync": {
+        "attempted": 30,
+        "pairs": 22,
+        "transcriptfetch": {
+          "succeeded": 30,
+          "medianMs": 6619.5,
+          "p90Ms": 11357.200000000004,
+          "meanMs": 7221
+        },
+        "supadata": {
+          "succeeded": 22,
+          "medianMs": 29260.5,
+          "p90Ms": 46331.700000000004,
+          "meanMs": 33061
+        },
+        "transcriptfetchFaster": 22
+      },
+      "transcriptfetch=none supadata=sync": {
+        "attempted": 2,
+        "pairs": 0,
+        "transcriptfetch": {
+          "succeeded": 0,
+          "medianMs": null,
+          "p90Ms": null,
+          "meanMs": null
+        },
+        "supadata": {
+          "succeeded": 0,
+          "medianMs": null,
+          "p90Ms": null,
+          "meanMs": null
+        },
+        "transcriptfetchFaster": 0
+      },
+      "transcriptfetch=audio supadata=job": {
+        "attempted": 1,
+        "pairs": 0,
+        "transcriptfetch": {
+          "succeeded": 1,
+          "medianMs": null,
+          "p90Ms": null,
+          "meanMs": null
+        },
+        "supadata": {
+          "succeeded": 0,
+          "medianMs": null,
+          "p90Ms": null,
+          "meanMs": null
+        },
+        "transcriptfetchFaster": 0
+      }
+    },
+    "failures": {
+      "transcriptfetch": [
+        [
+          "no_speech",
+          1
+        ],
+        [
+          "no_audio_stream",
+          1
+        ]
+      ],
+      "supadata": [
+        [
+          "transcript-unavailable",
+          9
+        ],
+        [
+          "fetch failed",
+          1
+        ],
+        [
+          "empty_transcript",
+          1
+        ],
+        [
+          "invalid-request",
+          1
+        ]
+      ]
+    }
+  },
+  "youtube": {
+    "mode": "captions",
+    "attempted": 120,
+    "pairs": 120,
+    "transcriptfetch": {
+      "succeeded": 120,
+      "medianMs": 1074,
+      "p90Ms": 2135.2000000000003,
+      "meanMs": 1474
+    },
+    "supadata": {
+      "succeeded": 120,
+      "medianMs": 5420.5,
+      "p90Ms": 13653.800000000001,
+      "meanMs": 6791
+    },
+    "transcriptfetchFaster": 116,
+    "bySource": {
+      "transcriptfetch=captions supadata=sync": {
+        "attempted": 120,
+        "pairs": 120,
+        "transcriptfetch": {
+          "succeeded": 120,
+          "medianMs": 1074,
+          "p90Ms": 2135.2000000000003,
+          "meanMs": 1474
+        },
+        "supadata": {
+          "succeeded": 120,
+          "medianMs": 5420.5,
+          "p90Ms": 13653.800000000001,
+          "meanMs": 6791
+        },
+        "transcriptfetchFaster": 116
+      }
+    },
+    "failures": {
+      "transcriptfetch": [],
+      "supadata": []
+    }
+  }
+}

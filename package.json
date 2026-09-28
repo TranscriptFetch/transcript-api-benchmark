@@ -1,0 +1,15 @@
+{
+  "name": "transcript-api-benchmark",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Reproducible head-to-head latency and success benchmark for transcript APIs (TranscriptFetch vs Supadata).",
+  "type": "module",
+  "license": "MIT",
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "youtube": "node bench.mjs --corpus=corpus/youtube.tsv --mode=captions --out=results/mine/youtube.jsonl",
+    "tiktok": "node bench.mjs --corpus=corpus/tiktok.tsv --mode=auto --out=results/mine/tiktok.jsonl",
+    "instagram": "node bench.mjs --corpus=corpus/instagram.tsv --mode=auto --out=results/mine/instagram.jsonl",
+    "summary": "node summarize.mjs results/mine"
+  }
+}

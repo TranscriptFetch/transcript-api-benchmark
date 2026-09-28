@@ -1,0 +1,28 @@
+{
+  "started": "2026-09-28T12:58:19.810Z",
+  "finished": "2026-09-28T15:20:03.636Z",
+  "origin": "Warrenton Virginia US / AS16276 OVH SAS",
+  "node": "v22.23.2",
+  "transcriptfetch": {
+    "endpoint": "POST /api/v2/transcripts/video",
+    "account": "TranscriptFetch staff probe account",
+    "cacheBypass": {
+      "youtube": true,
+      "tiktok": false,
+      "instagram": false
+    }
+  },
+  "supadata": {
+    "endpoint": "GET /v1/transcript",
+    "plan": "Pro",
+    "creditsUsedIncludingSmokeTest": 527
+  },
+  "modes": {
+    "youtube": "captions",
+    "tiktok": "auto",
+    "instagram": "auto"
+  },
+  "pollIntervalMs": 1000,
+  "timeoutMs": 300000,
+  "note": "Instagram was paused after 23 URLs (about 14:13-14:43 UTC) while a TranscriptFetch scraper bug the run exposed was fixed and deployed, then resumed with the same script; bench.mjs skips URLs already recorded."
+}
