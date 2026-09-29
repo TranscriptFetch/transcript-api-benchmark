@@ -12,7 +12,7 @@
   },
   "transcriptapi": {
     "endpoint": "GET /api/v2/youtube/transcript",
-    "plan": "entry paid plan ($5/month per transcriptapi.com docs)",
+    "plan": "paid plan",
     "creditsCharged": 463,
     "cacheStatus": {
       "HIT": 326,
