@@ -2,3 +2,4 @@ node_modules/
 results/mine/
 results/smoke/
 .env
+results/*/raw/

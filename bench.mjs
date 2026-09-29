@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-// Head-to-head transcript API benchmark: TranscriptFetch vs Supadata.
+// Head-to-head transcript API benchmark: TranscriptFetch vs one competitor
+// (--competitor=supadata, the default, or --competitor=transcriptapi).
 //
 // For every URL in a corpus file, both APIs are called at the same instant.
 // A side that answers with an async job is polled at the same interval as the
@@ -10,10 +11,19 @@
 //
 //   TRANSCRIPTFETCH_API_KEY=... SUPADATA_API_KEY=... \
 //     node bench.mjs --corpus corpus/youtube.tsv --mode captions --out results/mine/youtube.jsonl
+//   TRANSCRIPTFETCH_API_KEY=... TRANSCRIPTAPI_API_KEY=... \
+//     node bench.mjs --competitor=transcriptapi --corpus corpus/transcriptapi/youtube.tsv \
+//       --mode captions --max-charged=100 --out results/mine/youtube.jsonl
+//
+// Paid credits are protected two ways. Before each URL is sent, a line is
+// appended to <out>.started; a rerun skips any URL listed there even if its
+// result never got written (a crash mid-request), so no URL is ever billed
+// twice. And --max-charged=N stops the run once N competitor responses that
+// the competitor bills for (HTTP 200 on TranscriptAPI) have been recorded.
 //
 // No dependencies; Node 18 or newer (global fetch).
 
-import { appendFileSync, existsSync, mkdirSync, readFileSync } from "node:fs";
+import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 
 const args = Object.fromEntries(
@@ -32,15 +42,28 @@ const LIMIT = args.limit ? Number(args.limit) : Infinity;
 const BYPASS = args["bypass-cache"] === "true";
 const TF_BASE = (args["tf-base"] ?? "https://transcriptfetch.com").replace(/\/$/, "");
 const SD_BASE = (args["supadata-base"] ?? "https://api.supadata.ai/v1").replace(/\/$/, "");
+const TA_BASE = (args["transcriptapi-base"] ?? "https://transcriptapi.com/api/v2").replace(/\/$/, "");
+const COMPETITOR = args.competitor ?? "supadata"; // supadata | transcriptapi
+const MAX_CHARGED = args["max-charged"] ? Number(args["max-charged"]) : Infinity;
+// Optional: save each competitor response body here (one file per video), so
+// a parsing mistake can be corrected offline instead of paying to re-fetch.
+// Transcripts are third-party content: keep this directory out of git.
+const RAW_DIR = args["raw-dir"] ?? null;
 const TF_KEY = process.env.TRANSCRIPTFETCH_API_KEY;
 const SD_KEY = process.env.SUPADATA_API_KEY;
+const TA_KEY = process.env.TRANSCRIPTAPI_API_KEY;
+const COMPETITOR_KEY = { supadata: SD_KEY, transcriptapi: TA_KEY }[COMPETITOR];
 
-if (!CORPUS || !OUT || !["captions", "auto"].includes(MODE)) {
-  console.error("usage: node bench.mjs --corpus=<file.tsv> --out=<file.jsonl> [--mode=captions|auto] [--interval=1000] [--timeout=300000] [--limit=N]");
+if (!CORPUS || !OUT || !["captions", "auto"].includes(MODE) || !["supadata", "transcriptapi"].includes(COMPETITOR)) {
+  console.error("usage: node bench.mjs --corpus=<file.tsv> --out=<file.jsonl> [--competitor=supadata|transcriptapi] [--mode=captions|auto] [--interval=1000] [--timeout=300000] [--limit=N] [--max-charged=N] [--raw-dir=<dir>]");
   process.exit(2);
 }
-if (!TF_KEY || !SD_KEY) {
-  console.error("Set TRANSCRIPTFETCH_API_KEY and SUPADATA_API_KEY.");
+if (COMPETITOR === "transcriptapi" && MODE !== "captions") {
+  console.error("TranscriptAPI returns YouTube captions only; use --mode=captions.");
+  process.exit(2);
+}
+if (!TF_KEY || !COMPETITOR_KEY) {
+  console.error(`Set TRANSCRIPTFETCH_API_KEY and ${COMPETITOR === "supadata" ? "SUPADATA_API_KEY" : "TRANSCRIPTAPI_API_KEY"}.`);
   process.exit(2);
 }
 
@@ -56,12 +79,20 @@ const corpus = readFileSync(CORPUS, "utf8")
   })
   .slice(0, LIMIT);
 
-const done = new Set(
-  existsSync(OUT)
-    ? readFileSync(OUT, "utf8").split("\n").filter(Boolean).map((l) => JSON.parse(l).url)
-    : [],
+const recorded = existsSync(OUT)
+  ? readFileSync(OUT, "utf8").split("\n").filter(Boolean).map((l) => JSON.parse(l))
+  : [];
+const STARTED = `${OUT}.started`;
+const started = new Set(
+  existsSync(STARTED) ? readFileSync(STARTED, "utf8").split("\n").filter(Boolean) : [],
 );
+const done = new Set([...recorded.map((r) => r.url), ...started]);
+const billed = (side) => (COMPETITOR === "transcriptapi" ? side?.status === 200 : side?.ok === true);
+let charged = recorded.filter((r) => billed(r[COMPETITOR])).length;
+const lost = [...started].filter((u) => !recorded.some((r) => r.url === u));
+if (lost.length) console.log(`skipping ${lost.length} URL(s) sent before an interruption with no recorded result: ${lost.join(" ")}`);
 mkdirSync(dirname(OUT), { recursive: true });
+if (RAW_DIR) mkdirSync(RAW_DIR, { recursive: true });
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const now = () => performance.now();
@@ -75,7 +106,7 @@ async function call(url, init) {
   } catch {
     body = { non_json: text.slice(0, 200) };
   }
-  return { status: res.status, body };
+  return { status: res.status, body, text, headers: res.headers };
 }
 
 const textLength = (value) => {
@@ -165,14 +196,59 @@ async function supadata(url) {
   }
 }
 
+// ── TranscriptAPI: GET /api/v2/youtube/transcript, synchronous ──
+// Billing (their docs, 2026-09-29): 1 credit per HTTP 200, cached answers
+// included; 4xx/5xx and 429 cost nothing. X-Cache-Status says whether the
+// answer came from their cache (HIT, PARTIAL-HIT, MISS).
+async function transcriptapi(url) {
+  const t0 = now();
+  try {
+    const q = new URL(`${TA_BASE}/youtube/transcript`);
+    q.searchParams.set("video_url", url);
+    q.searchParams.set("format", "json");
+    q.searchParams.set("include_timestamp", "false");
+    const r = await call(q.toString(), { headers: { authorization: `Bearer ${TA_KEY}` } });
+    const ms = Math.round(now() - t0);
+    if (RAW_DIR) {
+      const id = new URL(url).searchParams.get("v") ?? url.replace(/\W+/g, "_").slice(-40);
+      writeFileSync(`${RAW_DIR}/${id}.json`, JSON.stringify({ status: r.status, headers: Object.fromEntries(r.headers), body: r.text }) + "\n");
+    }
+    const chars = textLength(r.body?.transcript) ?? (r.status === 200 && r.body?.non_json ? r.text.length : null);
+    const ok = r.status === 200 && !!chars;
+    const detail = r.body?.detail;
+    return {
+      ok,
+      status: r.status,
+      ms,
+      path: "sync",
+      polls: 0,
+      source: r.body?.language ? (String(r.body.language).startsWith("asr") ? "auto_captions" : "captions") : null,
+      language: r.body?.language ?? null,
+      chars,
+      cache: r.headers.get("x-cache-status"),
+      error: ok ? null : typeof detail === "string" ? detail : detail?.reason ?? detail?.message ?? (r.status === 200 ? "empty_transcript" : `HTTP ${r.status}`),
+    };
+  } catch (e) {
+    return { ok: false, status: 0, ms: Math.round(now() - t0), path: null, polls: 0, source: null, language: null, chars: null, cache: null, error: String(e?.name === "TimeoutError" ? "timeout" : e?.message ?? e) };
+  }
+}
+
+const competitor = { supadata, transcriptapi }[COMPETITOR];
+const short = COMPETITOR === "supadata" ? "sd" : "ta";
 let i = 0;
 for (const item of corpus) {
   i++;
   if (done.has(item.url)) continue;
+  if (charged >= MAX_CHARGED) {
+    console.log(`stopping: ${charged} billed ${COMPETITOR} responses recorded (--max-charged=${MAX_CHARGED})`);
+    break;
+  }
+  appendFileSync(STARTED, item.url + "\n");
   const startedAt = new Date().toISOString();
-  const [tf, sd] = await Promise.all([transcriptfetch(item.url), supadata(item.url)]);
-  const row = { ...item, mode: MODE, startedAt, transcriptfetch: tf, supadata: sd };
+  const [tf, other] = await Promise.all([transcriptfetch(item.url), competitor(item.url)]);
+  const row = { ...item, mode: MODE, startedAt, competitor: COMPETITOR, transcriptfetch: tf, [COMPETITOR]: other };
   appendFileSync(OUT, JSON.stringify(row) + "\n");
+  if (billed(other)) charged++;
   const fmt = (s) => (s.ok ? `${(s.ms / 1000).toFixed(1)}s` : `FAIL(${s.error})`);
-  console.log(`[${i}/${corpus.length}] tf ${fmt(tf)}  sd ${fmt(sd)}  ${item.url}`);
+  console.log(`[${i}/${corpus.length}] tf ${fmt(tf)}  ${short} ${fmt(other)}${other.cache ? ` cache=${other.cache}` : ""}  billed=${charged}  ${item.url}`);
 }

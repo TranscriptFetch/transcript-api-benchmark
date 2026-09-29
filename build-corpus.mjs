@@ -9,6 +9,11 @@
 // a corpus file is only a list of URLs, one per line.
 //
 //   TRANSCRIPTFETCH_API_KEY=... node build-corpus.mjs --platform=youtube
+//
+// Options: --exclude=<file> (URLs to leave out), --out=<file> (default
+// corpus/<platform>.tsv), --max=N (take results round-robin across the
+// queries until N, so every query contributes evenly), --search-limit=N
+// (results requested per query, default 2 x perQuery).
 
 import { readFileSync, writeFileSync } from "node:fs";
 
@@ -32,11 +37,15 @@ if (!spec || !KEY) {
 const excluded = new Set(
   args.exclude ? readFileSync(args.exclude, "utf8").split("\n").map((l) => l.trim()).filter(Boolean) : [],
 );
+const MAX = args.max ? Number(args.max) : null;
+const SEARCH_LIMIT = Math.min(50, Number(args["search-limit"] ?? spec.perQuery * 2));
+const OUT_FILE = args.out ? new URL(args.out, `file://${process.cwd()}/`) : new URL(`./corpus/${PLATFORM}.tsv`, import.meta.url);
 const seen = new Set();
-const lines = [`# ${PLATFORM} corpus, built ${new Date().toISOString().slice(0, 10)} from corpus/queries.json`, "# url\tquery\tduration_seconds"];
+const perQuery = []; // [{ query, rows: [[url, query, duration], ...] }]
+const lines = [`# ${PLATFORM} corpus, built ${new Date().toISOString().slice(0, 10)} from corpus/queries.json${MAX ? `, ${MAX} URLs taken round-robin across the queries` : ""}`, "# url\tquery\tduration_seconds"];
 for (const q of spec.queries) {
   // Ask for extra rows so duplicates and excluded URLs can be skipped.
-  const body = { query: q.query, platform: PLATFORM, limit: Math.min(50, spec.perQuery * 2), ...(spec.filters ?? {}), ...(q.filters ?? {}) };
+  const body = { query: q.query, platform: PLATFORM, limit: SEARCH_LIMIT, ...(spec.filters ?? {}), ...(q.filters ?? {}) };
   const res = await fetch(`${BASE}/api/v2/transcripts/search`, {
     method: "POST",
     headers: { authorization: `Bearer ${KEY}`, "content-type": "application/json" },
@@ -44,14 +53,26 @@ for (const q of spec.queries) {
   });
   const json = await res.json();
   const rows = json?.data?.videos ?? json?.data?.items ?? json?.data?.results ?? [];
-  let kept = 0;
+  const kept = [];
   for (const row of rows) {
-    if (!row?.url || seen.has(row.url) || excluded.has(row.url) || kept >= spec.perQuery) continue;
+    if (!row?.url || seen.has(row.url) || excluded.has(row.url) || kept.length >= spec.perQuery) continue;
     seen.add(row.url);
-    kept++;
-    lines.push([row.url, q.query, row.duration ?? ""].join("\t"));
+    kept.push([row.url, q.query, row.duration ?? ""]);
   }
-  console.log(`${PLATFORM} "${q.query}": ${kept} (HTTP ${res.status})`);
+  perQuery.push({ query: q.query, rows: kept });
+  console.log(`${PLATFORM} "${q.query}": ${kept.length} (HTTP ${res.status})`);
 }
-writeFileSync(new URL(`./corpus/${PLATFORM}.tsv`, import.meta.url), lines.join("\n") + "\n");
-console.log(`${PLATFORM}: ${seen.size} URLs${excluded.size ? ` (${excluded.size} excluded URLs skipped where they appeared)` : ""}`);
+// Without --max: every query's first perQuery results, query by query.
+// With --max: first result of every query, then the second of every query,
+// and so on, so no topic is cut off when N is not a multiple of the query count.
+const picked = [];
+if (MAX) {
+  for (let round = 0; picked.length < MAX && perQuery.some((q) => q.rows[round]); round++) {
+    for (const q of perQuery) if (q.rows[round] && picked.length < MAX) picked.push(q.rows[round]);
+  }
+} else {
+  for (const q of perQuery) picked.push(...q.rows);
+}
+for (const row of picked) lines.push(row.join("\t"));
+writeFileSync(OUT_FILE, lines.join("\n") + "\n");
+console.log(`${PLATFORM}: ${picked.length} URLs -> ${OUT_FILE.pathname}${excluded.size ? ` (${excluded.size} excluded URLs skipped where they appeared)` : ""}`);

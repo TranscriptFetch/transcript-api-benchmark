@@ -3,13 +3,23 @@
 // requests each to a cheap authenticated/health endpoint on both APIs, so a
 // reader can see how much of any latency gap is just the network path.
 //   TRANSCRIPTFETCH_API_KEY=... SUPADATA_API_KEY=... node network.mjs results/<run>/network.json
+//   node network.mjs results/<run>/network.json transcriptapi
+//
+// TranscriptAPI has no health endpoint, so its baseline is an UNAUTHENTICATED
+// call to its API, which the API rejects immediately: a network-and-front-door
+// round trip that never reaches YouTube and never touches a credit.
 
 import { writeFileSync } from "node:fs";
 
 const out = process.argv[2];
+const competitor = process.argv[3] ?? "supadata";
+const competitors = {
+  supadata: { url: "https://api.supadata.ai/v1/me", headers: { "x-api-key": process.env.SUPADATA_API_KEY ?? "" } },
+  transcriptapi: { url: "https://transcriptapi.com/api/v2/youtube/info?video_url=dQw4w9WgXcQ", headers: {} },
+};
 const targets = {
   transcriptfetch: { url: "https://transcriptfetch.com/api/v2/health", headers: {} },
-  supadata: { url: "https://api.supadata.ai/v1/me", headers: { "x-api-key": process.env.SUPADATA_API_KEY ?? "" } },
+  [competitor]: competitors[competitor],
 };
 const result = { measuredAt: new Date().toISOString(), samples: 5 };
 for (const [name, t] of Object.entries(targets)) {
