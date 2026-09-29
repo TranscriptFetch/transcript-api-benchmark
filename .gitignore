@@ -3,3 +3,4 @@ results/mine/
 results/smoke/
 .env
 results/*/raw/
+*.started

@@ -26,7 +26,10 @@ const args = Object.fromEntries(
 const PLATFORM = args.platform;
 const KEY = process.env.TRANSCRIPTFETCH_API_KEY;
 const BASE = (args["tf-base"] ?? "https://transcriptfetch.com").replace(/\/$/, "");
-const spec = JSON.parse(readFileSync(new URL("./corpus/queries.json", import.meta.url), "utf8"))[PLATFORM];
+// --queries=<file> swaps in another query spec; --per-query overrides its perQuery.
+const QUERIES_FILE = args.queries ? new URL(args.queries, `file://${process.cwd()}/`) : new URL("./corpus/queries.json", import.meta.url);
+const spec = JSON.parse(readFileSync(QUERIES_FILE, "utf8"))[PLATFORM];
+if (spec && args["per-query"]) spec.perQuery = Number(args["per-query"]);
 if (!spec || !KEY) {
   console.error("usage: TRANSCRIPTFETCH_API_KEY=... node build-corpus.mjs --platform=youtube|tiktok|instagram");
   process.exit(2);
@@ -42,7 +45,7 @@ const SEARCH_LIMIT = Math.min(50, Number(args["search-limit"] ?? spec.perQuery *
 const OUT_FILE = args.out ? new URL(args.out, `file://${process.cwd()}/`) : new URL(`./corpus/${PLATFORM}.tsv`, import.meta.url);
 const seen = new Set();
 const perQuery = []; // [{ query, rows: [[url, query, duration], ...] }]
-const lines = [`# ${PLATFORM} corpus, built ${new Date().toISOString().slice(0, 10)} from corpus/queries.json${MAX ? `, ${MAX} URLs taken round-robin across the queries` : ""}`, "# url\tquery\tduration_seconds"];
+const lines = [`# ${PLATFORM} corpus, built ${new Date().toISOString().slice(0, 10)} from ${args.queries ?? "corpus/queries.json"}${MAX ? `, ${MAX} URLs taken round-robin across the queries` : ""}`, "# url\tquery\tduration_seconds"];
 for (const q of spec.queries) {
   // Ask for extra rows so duplicates and excluded URLs can be skipped.
   const body = { query: q.query, platform: PLATFORM, limit: SEARCH_LIMIT, ...(spec.filters ?? {}), ...(q.filters ?? {}) };

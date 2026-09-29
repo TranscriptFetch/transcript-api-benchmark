@@ -1,0 +1,28 @@
+{
+  "measuredAt": "2026-09-29T01:59:12.110Z",
+  "samples": 5,
+  "transcriptfetch": {
+    "url": "https://transcriptfetch.com/api/v2/health",
+    "ms": [
+      235,
+      63,
+      70,
+      72,
+      76
+    ],
+    "min": 63,
+    "max": 235
+  },
+  "transcriptapi": {
+    "url": "https://transcriptapi.com/api/v2/youtube/info?video_url=dQw4w9WgXcQ",
+    "ms": [
+      145,
+      144,
+      124,
+      124,
+      119
+    ],
+    "min": 119,
+    "max": 145
+  }
+}

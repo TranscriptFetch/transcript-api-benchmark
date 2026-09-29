@@ -1,0 +1,107 @@
+{
+  "youtube": {
+    "mode": "captions",
+    "attempted": 500,
+    "pairs": 463,
+    "transcriptfetch": {
+      "succeeded": 500,
+      "medianMs": 733,
+      "p90Ms": 1142.4,
+      "meanMs": 939
+    },
+    "transcriptapi": {
+      "succeeded": 463,
+      "medianMs": 421,
+      "p90Ms": 2967.2,
+      "meanMs": 1116
+    },
+    "transcriptfetchFaster": 151,
+    "bySource": {
+      "transcriptfetch=captions transcriptapi=cache:HIT": {
+        "attempted": 326,
+        "pairs": 326,
+        "transcriptfetch": {
+          "succeeded": 326,
+          "medianMs": 717,
+          "p90Ms": 1149,
+          "meanMs": 945
+        },
+        "transcriptapi": {
+          "succeeded": 326,
+          "medianMs": 333,
+          "p90Ms": 583.5,
+          "meanMs": 386
+        },
+        "transcriptfetchFaster": 21
+      },
+      "transcriptfetch=captions transcriptapi=cache:MISS": {
+        "attempted": 137,
+        "pairs": 137,
+        "transcriptfetch": {
+          "succeeded": 137,
+          "medianMs": 789,
+          "p90Ms": 1110.4,
+          "meanMs": 925
+        },
+        "transcriptapi": {
+          "succeeded": 137,
+          "medianMs": 2568,
+          "p90Ms": 4409.600000000001,
+          "meanMs": 2854
+        },
+        "transcriptfetchFaster": 130
+      },
+      "transcriptfetch=captions transcriptapi=cache:none": {
+        "attempted": 37,
+        "pairs": 0,
+        "transcriptfetch": {
+          "succeeded": 37,
+          "medianMs": null,
+          "p90Ms": null,
+          "meanMs": null
+        },
+        "transcriptapi": {
+          "succeeded": 0,
+          "medianMs": null,
+          "p90Ms": null,
+          "meanMs": null
+        },
+        "transcriptfetchFaster": 0
+      }
+    },
+    "competitor": "transcriptapi",
+    "failures": {
+      "transcriptfetch": [],
+      "transcriptapi": [
+        [
+          "Request failed, please retry",
+          31
+        ],
+        [
+          "Video KcDDRmG66Uo not found or unavailable",
+          1
+        ],
+        [
+          "Video 7Ssw5fMmPz0 not found or unavailable",
+          1
+        ],
+        [
+          "Video A7qDPZMtr_E not found or unavailable",
+          1
+        ],
+        [
+          "Video eChiW3coNcY not found or unavailable",
+          1
+        ],
+        [
+          "Video euscHDHEmJM not found or unavailable",
+          1
+        ],
+        [
+          "Video dVv-mGYoWTQ not found or unavailable",
+          1
+        ]
+      ]
+    }
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "started": "2026-09-29T01:43:40.483Z",
+  "finished": "2026-09-29T01:59:10.936Z",
+  "origin": "Warrenton Virginia US / AS16276 OVH SAS",
+  "node": "v22.23.2",
+  "transcriptfetch": {
+    "endpoint": "POST /api/v2/transcripts/video",
+    "account": "TranscriptFetch staff probe account",
+    "cacheBypass": {
+      "youtube": true
+    }
+  },
+  "transcriptapi": {
+    "endpoint": "GET /api/v2/youtube/transcript",
+    "plan": "entry paid plan ($5/month per transcriptapi.com docs)",
+    "creditsCharged": 463,
+    "cacheStatus": {
+      "HIT": 326,
+      "PARTIAL-HIT": 0,
+      "MISS": 137,
+      "none (failed)": 37
+    }
+  },
+  "modes": {
+    "youtube": "captions"
+  },
+  "pollIntervalMs": 1000,
+  "timeoutMs": 300000,
+  "benchExitCode": 0,
+  "note": "The first URL ran alone at 01:43:40 UTC as a check of the response parsing; the other 499 ran 01:44:22-01:59:10 UTC with the same script (bench.mjs skips URLs already recorded). No retries on either side: TranscriptAPI documents 408 as safe to retry, but each API gets one attempt per URL, as in the Supadata run."
+}

@@ -1,0 +1,103 @@
+{
+  "youtube": {
+    "perQuery": 25,
+    "filters": {
+      "captions": true
+    },
+    "queries": [
+      {
+        "query": "python tutorial",
+        "filters": {
+          "duration": "medium"
+        }
+      },
+      {
+        "query": "podcast full episode interview",
+        "filters": {
+          "duration": "long"
+        }
+      },
+      {
+        "query": "recette facile cuisine"
+      },
+      {
+        "query": "news explained",
+        "filters": {
+          "upload_date": "week"
+        }
+      },
+      {
+        "query": "phone review",
+        "filters": {
+          "duration": "short"
+        }
+      },
+      {
+        "query": "university lecture",
+        "filters": {
+          "duration": "long"
+        }
+      },
+      {
+        "query": "stock market explained"
+      },
+      {
+        "query": "travel vlog"
+      },
+      {
+        "query": "home workout routine"
+      },
+      {
+        "query": "noticias de hoy",
+        "filters": {
+          "upload_date": "week"
+        }
+      },
+      {
+        "query": "history documentary",
+        "filters": {
+          "duration": "long"
+        }
+      },
+      {
+        "query": "how to fix a leaking faucet",
+        "filters": {
+          "duration": "short"
+        }
+      },
+      {
+        "query": "machine learning explained",
+        "filters": {
+          "duration": "medium"
+        }
+      },
+      {
+        "query": "guitar lesson for beginners"
+      },
+      {
+        "query": "movie review"
+      },
+      {
+        "query": "science documentary",
+        "filters": {
+          "duration": "long"
+        }
+      },
+      {
+        "query": "car review"
+      },
+      {
+        "query": "personal finance tips"
+      },
+      {
+        "query": "aprender inglés"
+      },
+      {
+        "query": "Nachrichten heute",
+        "filters": {
+          "upload_date": "week"
+        }
+      }
+    ]
+  }
+}

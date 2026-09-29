@@ -1,10 +1,12 @@
-# Transcript API benchmark: TranscriptFetch vs Supadata
+# Transcript API benchmark: TranscriptFetch vs Supadata and TranscriptAPI
 
-A reproducible head-to-head of two hosted transcript APIs,
-[TranscriptFetch](https://transcriptfetch.com) and [Supadata](https://supadata.ai),
-on YouTube, TikTok and Instagram. It measures what a client sees: how long it
-takes from sending the request until the full transcript text is in hand, and
-how often a transcript comes back at all.
+Reproducible head-to-heads of hosted transcript APIs:
+[TranscriptFetch](https://transcriptfetch.com) against
+[Supadata](https://supadata.ai) on YouTube, TikTok and Instagram, and against
+[TranscriptAPI](https://transcriptapi.com) on YouTube (the only platform it
+serves). Each measures what a client sees: how long it takes from sending the
+request until the full transcript text is in hand, and how often a transcript
+comes back at all.
 
 > **Disclosure.** TranscriptFetch built this benchmark and ran the published
 > results. Everything needed to check them is in this repository: the code,
@@ -34,6 +36,30 @@ Median and 90th percentile are over the URLs where **both** APIs returned a tran
 
 `fetch failed` in Supadata's failure list is a network-level error on the request from our server to Supadata; the script does not retry, so it counts as a failure.
 
+## Results: TranscriptAPI, 29 September 2026
+
+Run from the same OVH server in Warrenton, Virginia (US) between 01:43 and 01:59 UTC, against TranscriptAPI's entry paid plan. 500 YouTube URLs, captions only, none of them used in any earlier run.
+
+| | TranscriptFetch | TranscriptAPI |
+|---|---|---|
+| Transcripts returned | **500**/500 | 463/500 |
+| Median, both returned (n=463) | 0.7 s | **0.4 s** |
+| 90th percentile, both returned | **1.1 s** | 3.0 s |
+| Faster on | 151/463 | 312/463 |
+
+TranscriptAPI labels every answer with `X-Cache-Status`, so the pairs split cleanly by whether its answer came from its cache:
+
+| TranscriptAPI answer | Pairs | TranscriptFetch median / p90 | TranscriptAPI median / p90 | TranscriptFetch faster on |
+|---|---|---|---|---|
+| From its cache (`HIT`) | 326 | 0.7 s / 1.2 s | **0.3 s / 0.6 s** | 21/326 |
+| Fetched fresh (`MISS`) | 137 | **0.8 s / 1.1 s** | 2.6 s / 4.4 s | 130/137 |
+
+- TranscriptFetch's side sent `x-tf-bypass-cache: 1`, as in the Supadata run, so all 500 of its answers were fresh fetches from YouTube. TranscriptAPI answered 326 of its 463 transcripts (70%) from its cache. The first table therefore compares TranscriptFetch fetching fresh against TranscriptAPI's mix; the `MISS` row is the fresh-against-fresh comparison.
+- TranscriptAPI's 37 failures: 31 were HTTP 408 "Request failed, please retry" (its docs call these temporary, bot detection or network, and safe to retry), spread across the whole run rather than one outage; 6 were HTTP 404 "not found or unavailable" on videos TranscriptFetch returned. Neither API is retried (see methodology), so both count as failures.
+- The two APIs returned the same transcripts: TranscriptAPI's text was a median 2.4% shorter (formatting), and the default caption language differed on 17 of the 463 pairs.
+- TranscriptAPI charged 463 credits, one per successful answer; failures are free under its billing rules. Idle round trips from the same server: 119-145 ms to TranscriptAPI, 63-235 ms to TranscriptFetch (`network.json`).
+- Raw measurements: [`results/2026-09-29-transcriptapi/`](results/2026-09-29-transcriptapi/) (`youtube.jsonl`, `run.json`, `network.json`, `summary.md`).
+
 
 ## Methodology
 
@@ -62,6 +88,8 @@ each API over its own successes would compare different sets of videos.
 | YouTube | existing captions only | `POST /api/v2/transcripts/video` with `"mode": "captions"` | `GET /v1/transcript?mode=native` |
 | TikTok | any transcript | `POST /api/v2/transcripts/video` (default auto mode) | `GET /v1/transcript?mode=auto` |
 | Instagram | any transcript | `POST /api/v2/transcripts/video` (default auto mode) | `GET /v1/transcript?mode=auto` |
+
+TranscriptAPI (YouTube only) is asked with `GET /api/v2/youtube/transcript?video_url=<url>&format=json&include_timestamp=false`, no `language`, so it returns English or the video's first language, as TranscriptFetch does by default. It answers synchronously.
 
 YouTube runs caption-only because nearly every video in the corpus has
 captions, so this isolates retrieval speed. TikTok and Instagram run in auto
@@ -132,6 +160,22 @@ node summarize.mjs results/mine
 where it stopped. `--limit=N` runs only the first N URLs, `--interval` and
 `--timeout` (milliseconds) change the poll interval and per-request limit.
 
+To run the TranscriptAPI comparison instead, set `TRANSCRIPTAPI_API_KEY` and
+add `--competitor=transcriptapi` (it needs `--mode=captions`):
+
+```bash
+export TRANSCRIPTAPI_API_KEY=...     # https://transcriptapi.com (API access needs a paid plan)
+node network.mjs results/mine-ta/network.json transcriptapi
+node bench.mjs --competitor=transcriptapi --corpus=corpus/transcriptapi/youtube.tsv \
+  --mode=captions --max-charged=100 --out=results/mine-ta/youtube.jsonl
+node summarize.mjs results/mine-ta
+```
+
+Paid credits are protected: each URL is written to `<out>.started` before it
+is sent and is never sent again on a rerun, `--max-charged=N` stops after N
+billed answers, and an HTTP 402 (out of credits) on either side stops the run
+without recording that URL.
+
 **Use a fresh corpus for a cold test.** The URLs in `corpus/` were sent to
 both APIs when we ran the benchmark, so both services may now answer them from
 cache. To measure cold performance, build a new corpus first:
@@ -142,7 +186,9 @@ node build-corpus.mjs --platform=youtube --exclude=corpus/excluded.txt
 
 or put any list of URLs you care about in a file, one per line.
 
-**What it costs.** A full run is 360 transcripts per API. Caption fetches are
+**What it costs.** The TranscriptAPI run is 500 YouTube captions per API: 1
+credit per successful answer on TranscriptAPI (cached answers included,
+failures free) and 1 credit per transcript on TranscriptFetch. The Supadata run is 360 transcripts per API. Caption fetches are
 1 credit each on both services. When a TikTok or Instagram video has no
 captions, TranscriptFetch charges 1 credit per started 5 minutes of audio and
 Supadata charges 2 credits per minute. Our run used the Supadata credits
@@ -157,13 +203,16 @@ on Supadata) cover a sample: add `--limit=25`.
 | `summarize.mjs` | Turns a results folder into `summary.md` and `summary.json` |
 | `build-corpus.mjs` | Builds a corpus from the searches in `corpus/queries.json` |
 | `network.mjs` | Idle round-trip baseline to both APIs |
-| `corpus/` | The queries, the 120 URLs per platform, and the excluded URLs |
+| `corpus/` | The queries, the 120 URLs per platform, and the excluded URLs (Supadata run) |
+| `corpus/transcriptapi/` | 20 queries, the 500 YouTube URLs (25 per query) and the 171 excluded URLs (TranscriptAPI run) |
 | `results/<date>/` | Raw JSONL per platform, `run.json`, `network.json`, summaries |
 
 Each JSONL line holds the URL, the query it came from, the mode, and for each
 API: `ok`, `status`, `ms`, `path` (`sync`, or `job` when it went through an
-async job), `polls`, `source`, `language`, `chars` and `error`. API keys never
-appear in results.
+async job), `polls`, `source`, `language`, `chars` and `error`. TranscriptAPI
+rows also carry `cache` (its `X-Cache-Status`). API keys never appear in
+results, and the competitor's raw response bodies (third-party transcripts)
+are kept out of the repository.
 
 ## License
 

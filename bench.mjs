@@ -246,6 +246,14 @@ for (const item of corpus) {
   appendFileSync(STARTED, item.url + "\n");
   const startedAt = new Date().toISOString();
   const [tf, other] = await Promise.all([transcriptfetch(item.url), competitor(item.url)]);
+  // 402 is "out of credits / no plan" on either side: an account problem, not
+  // a result. Stop without recording the row and un-journal the URL (a 402 is
+  // never billed), so a top-up and a rerun measure it properly.
+  if (tf.status === 402 || other.status === 402) {
+    writeFileSync(STARTED, readFileSync(STARTED, "utf8").split("\n").filter((u) => u && u !== item.url).join("\n") + "\n");
+    console.log(`stopping: HTTP 402 from ${tf.status === 402 ? "TranscriptFetch" : COMPETITOR} (${tf.status === 402 ? tf.error : other.error}) at ${item.url}; nothing recorded for it`);
+    process.exit(3);
+  }
   const row = { ...item, mode: MODE, startedAt, competitor: COMPETITOR, transcriptfetch: tf, [COMPETITOR]: other };
   appendFileSync(OUT, JSON.stringify(row) + "\n");
   if (billed(other)) charged++;
