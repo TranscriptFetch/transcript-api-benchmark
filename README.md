@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="https://raw.githubusercontent.com/TranscriptFetch/transcript-api-benchmark/main/assets/logo.png" alt="TranscriptFetch" width="84" height="84" />
+</p>
+
 # Transcript API benchmark: TranscriptFetch vs Supadata and TranscriptAPI
 
 Reproducible head-to-heads of hosted transcript APIs:
